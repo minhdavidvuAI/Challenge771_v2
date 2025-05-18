@@ -172,7 +172,7 @@ if __name__ == "__main__":
 
             #augmented_dataset = ESC50(root=augment_path, subset="train", test_folds={test_fold}, global_mean_std=global_stats[test_fold - 1], augmentedFlag=True)
             if not os.path.exists(augment_path):
-                audio_augmenter = AudioAugmenter(esc50_preprocessed, augment_path)
+                audio_augmenter = AudioAugmenter(config.esc50_preprocessed, augment_path)
                 audio_augmenter.augment_data()
                 
             get_fold_augmented = partial(
