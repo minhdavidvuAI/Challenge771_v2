@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.utils.data import dataloader
+from torch.utils.data import dataloader, ConcatDataset
 import pandas as pd
 import numpy as np
 import os
@@ -9,19 +9,19 @@ import datetime
 from tqdm import tqdm
 import sys
 from functools import partial
-
-from models.model_classifier import AudioMLP
+    
+from models.model_classifier import ResNet50
 from models.utils import EarlyStopping, Tee
 from dataset.dataset_ESC50 import ESC50
 import config
 
 
 # mean and std of train data for every fold
-global_stats = np.array([[-54.364834, 20.853344],
-                         [-54.279022, 20.847532],
-                         [-54.18343, 20.80387],
-                         [-54.223698, 20.798292],
-                         [-54.200905, 20.949806]])
+global_stats = np.array([[-54.373577,  20.83404 ],
+                         [-54.289234,  20.848265],
+                         [-54.203648,  20.800789],
+                         [-54.230724,  20.805878],
+                         [-54.205643,  20.945042],])
 
 # evaluate model on different testing data 'dataloader'
 def test(model, dataloader, criterion, device):
@@ -144,12 +144,16 @@ if __name__ == "__main__":
     pd.options.display.float_format = ('{:,' + float_fmt + '}').format
     runs_path = config.runs_path
     experiment_root = os.path.join(runs_path, str(datetime.datetime.now().strftime('%Y-%m-%d-%H-%M')))
+    print(f"Root: {experiment_root}")
     os.makedirs(experiment_root, exist_ok=True)
-
+    
+    augment_path = "data/ESC-50-augmented-data"
+    
     # for all folds
     scores = {}
     # expensive!
-    #global_stats = get_global_stats(data_path)
+    global_stats = get_global_stats(data_path)
+    print(global_stats)
     # for spectrograms
     print("WARNING: Using hardcoded global mean and std. Depends on feature settings!")
     for test_fold in config.test_folds:
@@ -164,12 +168,33 @@ if __name__ == "__main__":
             get_fold_dataset = partial(ESC50, root=data_path, download=True,
                                        test_folds={test_fold}, global_mean_std=global_stats[test_fold - 1])
 
+            #augmented_dataset = ESC50(root=augment_path, subset="train", test_folds={test_fold}, global_mean_std=global_stats[test_fold - 1], augmentedFlag=True)
+            get_fold_augmented = partial(
+                ESC50,
+                root=augment_path,
+                download=False,
+                test_folds={test_fold},
+                global_mean_std=global_stats[test_fold - 1],
+                augmentedFlag=True,
+            )
+            
             train_set = get_fold_dataset(subset="train")
+            augmented_set = get_fold_augmented(subset="train")
+            combined_dataset = ConcatDataset([train_set, augmented_dataset])
+            
+            # sanity check
+            # train set should be the same length as augmented
+            if (len(train_set) == len(augmented_set):
+                print(f"lenght org: {len(train_set)}")
+                print(f"lenght aug: {len(augmented_set)}")
+                print(f"lenght both: {len(combined_dataset)}")
+                raise ValueError
+                
             print('*****')
             print(f'train folds are {train_set.train_folds} and test fold is {train_set.test_folds}')
             print('random wave cropping')
 
-            train_loader = torch.utils.data.DataLoader(train_set,
+            train_loader = torch.utils.data.DataLoader(combined_dataset,
                                                        batch_size=config.batch_size,
                                                        shuffle=True,
                                                        num_workers=config.num_workers,
@@ -195,12 +220,14 @@ if __name__ == "__main__":
 
             # Define a loss function and optimizer
             criterion = nn.CrossEntropyLoss().to(device)
-
+            """
             optimizer = torch.optim.SGD(model.parameters(),
                                         lr=config.lr,
                                         momentum=0.9,
                                         weight_decay=config.weight_decay)
-
+            """
+            #todo maybe change the parameters so that they are in config.py
+            optimizer = torch.optim.AdamW(model.parameters(), lr=1e-4, weight_decay=1e-2)
             scheduler = torch.optim.lr_scheduler.StepLR(optimizer,
                                                         step_size=config.step_size,
                                                         gamma=config.gamma)

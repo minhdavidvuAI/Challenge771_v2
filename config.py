@@ -19,12 +19,7 @@ n_mels = 128
 hop_length = 512
 #n_mfcc = 42
 
-model_constructor = "AudioMLP(n_steps=431,\
-n_mels=config.n_mels,\
-hidden1_size=512,\
-hidden2_size=128,\
-output_size=config.n_classes,\
-time_reduce=1)"
+model_constructor = "ResNet50(num_classes=config.n_classes)"
 
 # ###TRAINING
 # ratio to split off from training data
@@ -38,7 +33,7 @@ num_workers = 0
 # num_workers = 6#16
 persistent_workers = True
 persistent_workers = False
-epochs = 200
+epochs = 2
 #epochs = 1
 # early stopping after epochs with no improvement
 patience = 20

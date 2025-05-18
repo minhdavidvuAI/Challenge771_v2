@@ -52,8 +52,12 @@ def download_progress(current, total, width=80):
 
 class ESC50(data.Dataset):
 
-    def __init__(self, root, test_folds=frozenset((1,)), subset="train", global_mean_std=(0.0, 0.0), download=False):
+    def __init__(self, root, test_folds=frozenset((1,)), subset="train", global_mean_std=(0.0, 0.0), download=False, augmentedFlag=False):
         audio = 'ESC-50-master/audio'
+        #TODO
+        if augmentedFlag:
+            audio = ""
+        
         root = os.path.normpath(root)
         audio = os.path.join(root, audio)
         if subset in {"train", "test", "val"}:
@@ -62,6 +66,7 @@ class ESC50(data.Dataset):
             raise ValueError
         # path = path.split(os.sep)
         if not os.path.exists(audio) and download:
+            print("downloading files...")
             os.makedirs(root, exist_ok=True)
             file_name = 'master.zip'
             file_path = os.path.join(root, file_name)
@@ -95,9 +100,10 @@ class ESC50(data.Dataset):
             # transforms can be applied on wave and spectral representation
             self.wave_transforms = transforms.Compose(
                 torch.Tensor,
-                #transforms.RandomScale(max_scale=1.25),
+                transforms.RandomScale(max_scale=1.25),
                 transforms.RandomPadding(out_len=out_len),
-                transforms.RandomCrop(out_len=out_len)
+                transforms.RandomCrop(out_len=out_len),
+                transforms.RandomNoise(),
             )
 
             self.spec_transforms = transforms.Compose(
@@ -183,11 +189,32 @@ class ESC50(data.Dataset):
 
         return file_name, feat, class_id
 
-
+"""
 def get_global_stats(data_path):
     res = []
     for i in range(1, 6):
         train_set = ESC50(subset="train", test_folds={i}, root=data_path, download=True)
         a = torch.concatenate([v[1] for v in tqdm(train_set)])
         res.append((a.mean(), a.std()))
+    return np.array(res)
+"""
+def get_global_stats(data_path, augment_path):
+    if data_path == None or augment_path == None:
+        raise ValueError
+    res = []
+    for i in range(1, 6):
+        # Load original training data
+        train_set = ESC50(subset="train", test_folds={i}, root=data_path, download=True)
+        original_data = torch.concatenate([v[1] for v in tqdm(train_set)])
+        
+        # Load augmented training data
+        augmented_dataset = ESC50(root=augment_path, subset="train", test_folds={i}, global_mean_std=None, download=False, augmentedFlag=True)
+        augmented_data = torch.concatenate([v[1] for v in tqdm(augmented_dataset)])
+        
+        # Combine original and augmented data
+        combined_data = torch.cat([original_data, augmented_data], dim=0)
+        
+        # Compute global stats (mean and std) for the combined data
+        res.append((combined_data.mean(), combined_data.std()))
+    
     return np.array(res)

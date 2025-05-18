@@ -1,2 +1,5 @@
 outputs
 results
+.ipynb_checkpoints
+__pycache__
+test.ipynb
