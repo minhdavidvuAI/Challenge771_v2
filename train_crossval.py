@@ -152,7 +152,7 @@ if __name__ == "__main__":
     # for all folds
     scores = {}
     # expensive!
-    global_stats = get_global_stats(data_path)
+    global_stats = get_global_stats(data_path, "data/ESC-50-augmented-data")
     print(global_stats)
     # for spectrograms
     print("WARNING: Using hardcoded global mean and std. Depends on feature settings!")
