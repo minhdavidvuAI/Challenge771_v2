@@ -12,7 +12,8 @@ from functools import partial
     
 from models.model_classifier import ResNet50
 from models.utils import EarlyStopping, Tee
-from dataset.dataset_ESC50 import ESC50, get_global_stats
+from dataset.dataset_ESC50 import ESC50, get_global_stats, InMemoryESC50
+import augmentAudioClass
 import config
 
 
@@ -166,12 +167,16 @@ if __name__ == "__main__":
         with Tee(os.path.join(experiment, 'train.log'), 'w', 1, encoding='utf-8',
                  newline='\n', proc_cr=True):
             # this function assures consistent 'test_folds' setting for train, val, test splits
-            get_fold_dataset = partial(ESC50, root=data_path, download=True,
+            get_fold_dataset = partial(InMemoryESC50, root=data_path, download=True,
                                        test_folds={test_fold}, global_mean_std=global_stats[test_fold - 1])
 
             #augmented_dataset = ESC50(root=augment_path, subset="train", test_folds={test_fold}, global_mean_std=global_stats[test_fold - 1], augmentedFlag=True)
+            if not os.path.exists(augment_path):
+                audio_augmenter = AudioAugmenter(data_path, augment_path)
+                audio_augmenter.augment_data()
+                
             get_fold_augmented = partial(
-                ESC50,
+                InMemoryESC50,
                 root=augment_path,
                 download=False,
                 test_folds={test_fold},
