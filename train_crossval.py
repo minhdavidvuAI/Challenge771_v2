@@ -149,7 +149,7 @@ if __name__ == "__main__":
     print(f"Root: {experiment_root}")
     os.makedirs(experiment_root, exist_ok=True)
     
-    augment_path = "data/ESC-50-augmented-data"
+    augment_path = "data/preprocessed_data/augmented"
     
     # for all folds
     scores = {}
