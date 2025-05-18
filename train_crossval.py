@@ -12,7 +12,7 @@ from functools import partial
     
 from models.model_classifier import ResNet50
 from models.utils import EarlyStopping, Tee
-from dataset.dataset_ESC50 import ESC50
+from dataset.dataset_ESC50 import ESC50, get_global_stats
 import config
 
 
