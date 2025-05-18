@@ -183,7 +183,7 @@ if __name__ == "__main__":
             train_set = get_fold_dataset(subset="train")
             
             #augmented_dataset = ESC50(root=augment_path, subset="train", test_folds={test_fold}, global_mean_std=global_stats[test_fold - 1], augmentedFlag=True)
-            joined_path = os.path.join(config.esc50_preprocessed, f'fold_{testfold}_train')
+            joined_path = os.path.join(config.augment_preprocessed, f'fold_{testfold}_train')
 
             if not os.path.exists(joined_path):
                 audio_augmenter = AudioAugmenter(os.path.join(config.esc50_preprocessed,f'fold_{testfold}_train'), joined_path)
