@@ -56,7 +56,7 @@ class ESC50(data.Dataset):
         audio = 'ESC-50-master/audio'
         #TODO
         if augmentedFlag:
-            audio = ""
+            audio = "preprocessed_data/augmented"
         
         root = os.path.normpath(root)
         audio = os.path.join(root, audio)
@@ -201,9 +201,9 @@ class InMemoryESC50(ESC50):
         # Make safe folder name based on fold
         fold_str = "_".join(str(f) for f in sorted(test_folds))
         if not augmentedFlag:
-            output_dir = f"preprocessed_data/esc50/fold_{fold_str}_{subset}"
+            output_dir = f"{config.esc50_preprocessed}/fold_{fold_str}_{subset}"
         else:
-            output_dir = f"preprocessed_data/augmented/fold_{fold_str}_{subset}"
+            output_dir = f"{config.augment_preprocessed}/fold_{fold_str}_{subset}"
         folder_exists = os.path.exists(output_dir)
 
         if not folder_exists:
