@@ -17,11 +17,12 @@ import config
 
 
 # mean and std of train data for every fold
-global_stats = np.array([[-54.373577,  20.83404 ],
-                         [-54.289234,  20.848265],
-                         [-54.203648,  20.800789],
-                         [-54.230724,  20.805878],
-                         [-54.205643,  20.945042],])
+global_stats = np.array([[-54.356853,  21.016834],
+                         [-54.390457,  21.080683],
+                         [-54.20393,   20.988077],
+                         [-54.32683,   21.004726],
+                         [-54.21885,   21.044289]])
+ 
 
 # evaluate model on different testing data 'dataloader'
 def test(model, dataloader, criterion, device):
@@ -152,8 +153,8 @@ if __name__ == "__main__":
     # for all folds
     scores = {}
     # expensive!
-    global_stats = get_global_stats(data_path, "data/ESC-50-augmented-data")
-    print(global_stats)
+    #global_stats = get_global_stats(data_path, "data/ESC-50-augmented-data")
+    #print(global_stats)
     # for spectrograms
     print("WARNING: Using hardcoded global mean and std. Depends on feature settings!")
     for test_fold in config.test_folds:
@@ -180,7 +181,7 @@ if __name__ == "__main__":
             
             train_set = get_fold_dataset(subset="train")
             augmented_set = get_fold_augmented(subset="train")
-            combined_dataset = ConcatDataset([train_set, augmented_dataset])
+            combined_dataset = ConcatDataset([train_set, augmented_set])
             
             # sanity check
             # train set should be the same length as augmented
