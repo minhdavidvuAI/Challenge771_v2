@@ -184,7 +184,7 @@ if __name__ == "__main__":
             
             # sanity check
             # train set should be the same length as augmented
-            if (len(train_set) == len(augmented_set):
+            if (len(train_set) == len(augmented_set)):
                 print(f"lenght org: {len(train_set)}")
                 print(f"lenght aug: {len(augmented_set)}")
                 print(f"lenght both: {len(combined_dataset)}")
