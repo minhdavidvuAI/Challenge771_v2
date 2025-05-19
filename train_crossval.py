@@ -150,6 +150,10 @@ if __name__ == "__main__":
     
     augment_path = config.augment_path
     
+    ESC50(subset="train", root=config.esc50_path, download=True)
+    audio_augmenter = AudioAugmenter(os.path.join(config.esc50_path, 'ESC-50-master/audio'), config.augment_path)
+    audio_augmenter.augment_data()
+    
     # for all folds
     scores = {}
     # expensive!
@@ -164,7 +168,7 @@ if __name__ == "__main__":
         with Tee(os.path.join(experiment, 'train.log'), 'w', 1, encoding='utf-8',
                  newline='\n', proc_cr=True):
             # this function assures consistent 'test_folds' setting for train, val, test splits
-            get_fold_dataset = partial(InMemoryESC50, root=data_path, download=True,
+            get_fold_dataset = partial(InMemoryESC50, root=data_path, download=False,
                                        test_folds={test_fold}, global_mean_std=global_stats[test_fold - 1])
 
             
@@ -178,18 +182,6 @@ if __name__ == "__main__":
             )
             
             train_set = get_fold_dataset(subset="train")
-            
-            #augmented_dataset = ESC50(root=augment_path, subset="train", test_folds={test_fold}, global_mean_std=global_stats[test_fold - 1], augmentedFlag=True)
-            joined_path = os.path.join(config.augment_preprocessed, f'fold_{test_fold}_train')
-            #print(f"joined_path: {joined_path}")
-            
-            # Check if the augmented data directory exists and match the number of files with train_set length
-            augmented_files = [f for f in os.listdir(joined_path) if f.endswith('.wav')] if os.path.exists(joined_path) else []
-
-            if len(augmented_files) != len(train_set):
-                audio_augmenter = AudioAugmenter(os.path.join(config.esc50_path, 'ESC-50-master/audio'), config.augment_path)
-                audio_augmenter.augment_data()
-
             augmented_set = get_fold_augmented(subset="train")
             combined_dataset = ConcatDataset([train_set, augmented_set])
             
@@ -242,7 +234,7 @@ if __name__ == "__main__":
                                         weight_decay=config.weight_decay)
             """
             #todo maybe change the parameters so that they are in config.py
-            optimizer = torch.optim.AdamW(model.parameters(), lr=1e-4, weight_decay=1e-2)
+            optimizer = torch.optim.AdamW(model.parameters(), lr=5e-5, weight_decay=1e-2)
             scheduler = torch.optim.lr_scheduler.StepLR(optimizer,
                                                         step_size=config.step_size,
                                                         gamma=config.gamma)
