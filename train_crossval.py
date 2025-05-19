@@ -188,7 +188,7 @@ if __name__ == "__main__":
             
             if os.path.exists(joined_path):
                 augmented_files = [f for f in os.listdir(joined_path) if f.endswith('.wav')]  # Get all the .wav files in the folder
-                if len(augmented_files) != len(train_set)
+                if len(augmented_files) != len(train_set):
                     #print(f"audio folds: {os.path.join(config.esc50_preprocessed,f'fold_{test_fold}_train')}")
                     audio_augmenter = AudioAugmenter(os.path.join(config.esc50_path,'ESC-50-master/audio'), config.augment_path)
                     audio_augmenter.augment_data()
