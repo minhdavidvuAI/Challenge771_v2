@@ -154,8 +154,6 @@ if __name__ == "__main__":
     # for all folds
     scores = {}
     # expensive!
-    #global_stats = get_global_stats(data_path, "data/ESC-50-augmented-data")
-    #print(global_stats)
     # for spectrograms
     print("WARNING: Using hardcoded global mean and std. Depends on feature settings!")
     for test_fold in config.test_folds:
@@ -203,7 +201,11 @@ if __name__ == "__main__":
                 print(f"lenght aug: {len(augmented_set)}")
                 print(f"lenght both: {len(combined_dataset)}")
                 raise ValueError
-                
+            
+            global_stats = get_global_stats(data_path, augment_path)
+            print(global_stats)
+            
+            
             print('*****')
             print(f'train folds are {train_set.train_folds} and test fold is {train_set.test_folds}')
             print('random wave cropping')
@@ -241,7 +243,7 @@ if __name__ == "__main__":
                                         weight_decay=config.weight_decay)
             """
             #todo maybe change the parameters so that they are in config.py
-            optimizer = torch.optim.AdamW(model.parameters(), lr=1e-4, weight_decay=1e-2)
+            optimizer = torch.optim.AdamW(model.parameters(), lr=1e-5, weight_decay=1e-2)
             scheduler = torch.optim.lr_scheduler.StepLR(optimizer,
                                                         step_size=config.step_size,
                                                         gamma=config.gamma)
