@@ -56,7 +56,7 @@ class ESC50(data.Dataset):
         audio = 'ESC-50-master/audio'
         #TODO
         if augmentedFlag:
-            audio = "preprocessed_data/augmented"
+            audio = ""
         
         root = os.path.normpath(root)
         audio = os.path.join(root, audio)

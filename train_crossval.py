@@ -184,8 +184,9 @@ if __name__ == "__main__":
             
             #augmented_dataset = ESC50(root=augment_path, subset="train", test_folds={test_fold}, global_mean_std=global_stats[test_fold - 1], augmentedFlag=True)
             joined_path = os.path.join(config.augment_preprocessed, f'fold_{test_fold}_train')
-
+            print(f"joined_path: {joined_path}")
             if not os.path.exists(joined_path):
+                print(f"audio folds: {os.path.join(config.esc50_preprocessed,f'fold_{test_fold}_train')}")
                 audio_augmenter = AudioAugmenter(os.path.join(config.esc50_preprocessed,f'fold_{test_fold}_train'), joined_path)
                 audio_augmenter.augment_data()
                 
