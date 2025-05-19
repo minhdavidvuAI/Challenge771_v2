@@ -1,6 +1,7 @@
 # dir with ESC50 data
 esc50_path = 'data/esc50'
 esc50_preprocessed = 'data/preprocessed_data/esc50'
+augment_path = 'data/augmented'
 augment_preprocessed = 'data/preprocessed_data/augmented'
 runs_path = 'results'
 # sub-epoch (batch-level) progress bar display

@@ -149,7 +149,7 @@ if __name__ == "__main__":
     print(f"Root: {experiment_root}")
     os.makedirs(experiment_root, exist_ok=True)
     
-    augment_path = config.augment_preprocessed
+    augment_path = config.augment_path
     
     # for all folds
     scores = {}
@@ -187,7 +187,7 @@ if __name__ == "__main__":
             print(f"joined_path: {joined_path}")
             if not os.path.exists(joined_path):
                 print(f"audio folds: {os.path.join(config.esc50_preprocessed,f'fold_{test_fold}_train')}")
-                audio_augmenter = AudioAugmenter(os.path.join(config.esc50_preprocessed,f'fold_{test_fold}_train'), joined_path)
+                audio_augmenter = AudioAugmenter(os.path.join(config.esc50_path,'ESC-50-master/audio'), config.augment_path)
                 audio_augmenter.augment_data()
                 
             augmented_set = get_fold_augmented(subset="train")

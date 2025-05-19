@@ -25,6 +25,7 @@ class AudioAugmenter:
         # List all files in the audio directory
         self.files = sorted([f for f in os.listdir(self.audio_dir) if f.endswith('.wav')])
         
+        print(f"found files {self.files}")
         # List of augmentation functions
         self.aug_functions = [self.add_noise, self.pitch_shifting, self.random_shift, self.time_masking]
 
