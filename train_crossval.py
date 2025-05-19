@@ -16,13 +16,12 @@ from dataset.dataset_ESC50 import ESC50, get_global_stats, InMemoryESC50
 from augmentAudioClass import AudioAugmenter
 import config
 
-
 # mean and std of train data for every fold
-global_stats = np.array([[-54.356853,  21.016834],
-                         [-54.390457,  21.080683],
-                         [-54.20393,   20.988077],
-                         [-54.32683,   21.004726],
-                         [-54.21885,   21.044289]])
+global_stats = np.array([[[-54.342407,  21.136114],
+                         [-54.27736,   21.037266],
+                         [-54.197487,  21.005411],
+                         [-54.35301,   20.971909],
+                         [-54.166874,  21.144987]])
  
 
 # evaluate model on different testing data 'dataloader'
@@ -202,8 +201,8 @@ if __name__ == "__main__":
                 print(f"lenght both: {len(combined_dataset)}")
                 raise ValueError
             
-            global_stats = get_global_stats(data_path, augment_path)
-            print(global_stats)
+            #global_stats = get_global_stats(data_path, augment_path)
+            #print(global_stats)
             
             
             print('*****')
