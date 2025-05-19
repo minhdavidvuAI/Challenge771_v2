@@ -17,11 +17,11 @@ from augmentAudioClass import AudioAugmenter
 import config
 
 # mean and std of train data for every fold
-global_stats = np.array([[[-54.342407,  21.136114],
+global_stats = np.array([[-54.342407,  21.136114],
                          [-54.27736,   21.037266],
                          [-54.197487,  21.005411],
                          [-54.35301,   20.971909],
-                         [-54.166874,  21.144987]])
+                         [-54.166874,  21.144987]]) 
  
 
 # evaluate model on different testing data 'dataloader'
@@ -242,7 +242,7 @@ if __name__ == "__main__":
                                         weight_decay=config.weight_decay)
             """
             #todo maybe change the parameters so that they are in config.py
-            optimizer = torch.optim.AdamW(model.parameters(), lr=1e-5, weight_decay=1e-2)
+            optimizer = torch.optim.AdamW(model.parameters(), lr=1e-4, weight_decay=1e-2)
             scheduler = torch.optim.lr_scheduler.StepLR(optimizer,
                                                         step_size=config.step_size,
                                                         gamma=config.gamma)

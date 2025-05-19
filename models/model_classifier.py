@@ -15,7 +15,8 @@ class BasicBlock(nn.Module):
         self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size=3,
                                stride=1, padding=1, bias=False)
         self.bn2 = nn.BatchNorm2d(out_channels)
-
+        
+        self.dropout = nn.Dropout(0.3)
         self.downsample = downsample
         self.stride = stride
 
@@ -25,6 +26,7 @@ class BasicBlock(nn.Module):
         out = self.conv1(x)
         out = self.bn1(out)
         out = self.relu(out)
+        out = self.dropout(out)  # <-- added dropout here
 
         out = self.conv2(out)
         out = self.bn2(out)
@@ -58,7 +60,7 @@ class ResNet18(nn.Module):
         self.layer4 = self._make_layer(512, blocks=2, stride=2)
 
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
-        self.dropout = nn.Dropout(0.5)
+        self.dropout = nn.Dropout(0.6)
         self.fc = nn.Linear(512 * BasicBlock.expansion, num_classes)
 
     def _make_layer(self, out_channels, blocks, stride):
