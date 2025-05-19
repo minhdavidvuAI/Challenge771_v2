@@ -42,11 +42,13 @@ class AudioAugmenter:
         """
         Shifts the pitch of the audio data.
         """
+        
+        bins_per_octave = 12
         if isinstance(data, torch.Tensor):
             data = data.cpu().numpy()
         data = data.copy()  # Avoid modifying the original array
         pitch_change = self.pitch_pm * 2 * np.random.uniform()
-        data = librosa.effects.pitch_shift(y=data.astype('float64'), sr=self.sr, n_steps=pitch_change)
+        data = librosa.effects.pitch_shift(y=data.astype('float64'), sr=self.sr, n_steps=pitch_change, bins_per_octave=bins_per_octave)
         return torch.from_numpy(data).float()
 
     def random_shift(self, data):
