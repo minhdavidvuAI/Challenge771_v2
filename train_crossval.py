@@ -234,11 +234,20 @@ if __name__ == "__main__":
                                         weight_decay=config.weight_decay)
             """
             #todo maybe change the parameters so that they are in config.py
-            optimizer = torch.optim.AdamW(model.parameters(), lr=5e-5, weight_decay=1e-2)
+            optimizer = torch.optim.AdamW(model.parameters(), lr=1e-5, weight_decay=1e-2)
+            """
             scheduler = torch.optim.lr_scheduler.StepLR(optimizer,
                                                         step_size=config.step_size,
                                                         gamma=config.gamma)
-
+            """
+            scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+                optimizer,
+                mode='min',              # We want to minimize validation loss
+                factor=0.5,              # LR is reduced by this factor when triggered
+                patience=3,              # Number of epochs with no improvement before reducing LR
+                threshold=1e-4,          # Minimum change to qualify as improvement
+                verbose=True
+            )
             # fit the model using only training and validation data, no testing data allowed here
             print()
             fit_classifier()

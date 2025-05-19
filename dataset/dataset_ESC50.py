@@ -103,7 +103,7 @@ class ESC50(data.Dataset):
                 transforms.RandomScale(max_scale=1.25),
                 transforms.RandomPadding(out_len=out_len),
                 transforms.RandomCrop(out_len=out_len),
-                transforms.RandomNoise(),
+                #transforms.RandomNoise(),
             )
 
             self.spec_transforms = transforms.Compose(
