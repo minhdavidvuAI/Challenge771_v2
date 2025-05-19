@@ -10,7 +10,7 @@ from tqdm import tqdm
 import sys
 from functools import partial
     
-from models.model_classifier import ResNet50
+from models.model_classifier import ResNet18
 from models.utils import EarlyStopping, Tee
 from dataset.dataset_ESC50 import ESC50, get_global_stats, InMemoryESC50
 from augmentAudioClass import AudioAugmenter

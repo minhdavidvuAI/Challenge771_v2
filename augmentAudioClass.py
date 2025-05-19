@@ -43,7 +43,7 @@ class AudioAugmenter:
         Shifts the pitch of the audio data.
         """
         
-        bins_per_octave = 12
+        bins_per_octave = 8
         if isinstance(data, torch.Tensor):
             data = data.cpu().numpy()
         data = data.copy()  # Avoid modifying the original array
