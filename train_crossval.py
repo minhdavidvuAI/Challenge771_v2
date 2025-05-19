@@ -168,12 +168,12 @@ if __name__ == "__main__":
         with Tee(os.path.join(experiment, 'train.log'), 'w', 1, encoding='utf-8',
                  newline='\n', proc_cr=True):
             # this function assures consistent 'test_folds' setting for train, val, test splits
-            get_fold_dataset = partial(InMemoryESC50, root=data_path, download=False,
+            get_fold_dataset = partial(ESC50, root=data_path, download=False,
                                        test_folds={test_fold}, global_mean_std=global_stats[test_fold - 1])
 
             
             get_fold_augmented = partial(
-                InMemoryESC50,
+                ESC50,
                 root=augment_path,
                 download=False,
                 test_folds={test_fold},
@@ -235,19 +235,11 @@ if __name__ == "__main__":
             """
             #todo maybe change the parameters so that they are in config.py
             optimizer = torch.optim.AdamW(model.parameters(), lr=1e-5, weight_decay=1e-2)
-            """
+
             scheduler = torch.optim.lr_scheduler.StepLR(optimizer,
                                                         step_size=config.step_size,
                                                         gamma=config.gamma)
-            """
-            scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-                optimizer,
-                mode='min',              # We want to minimize validation loss
-                factor=0.5,              # LR is reduced by this factor when triggered
-                patience=3,              # Number of epochs with no improvement before reducing LR
-                threshold=1e-4,          # Minimum change to qualify as improvement
-                verbose=True
-            )
+
             # fit the model using only training and validation data, no testing data allowed here
             print()
             fit_classifier()
