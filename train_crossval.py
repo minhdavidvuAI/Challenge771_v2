@@ -186,13 +186,13 @@ if __name__ == "__main__":
             joined_path = os.path.join(config.augment_preprocessed, f'fold_{test_fold}_train')
             #print(f"joined_path: {joined_path}")
             
-            if os.path.exists(joined_path):
-                augmented_files = [f for f in os.listdir(joined_path) if f.endswith('.wav')]  # Get all the .wav files in the folder
-                if len(augmented_files) != len(train_set):
-                    #print(f"audio folds: {os.path.join(config.esc50_preprocessed,f'fold_{test_fold}_train')}")
-                    audio_augmenter = AudioAugmenter(os.path.join(config.esc50_path,'ESC-50-master/audio'), config.augment_path)
-                    audio_augmenter.augment_data()
-                
+            # Check if the augmented data directory exists and match the number of files with train_set length
+            augmented_files = [f for f in os.listdir(joined_path) if f.endswith('.wav')] if os.path.exists(joined_path) else []
+
+            if len(augmented_files) != len(train_set):
+                audio_augmenter = AudioAugmenter(os.path.join(config.esc50_path, 'ESC-50-master/audio'), config.augment_path)
+                audio_augmenter.augment_data()
+
             augmented_set = get_fold_augmented(subset="train")
             combined_dataset = ConcatDataset([train_set, augmented_set])
             
