@@ -74,6 +74,7 @@ class ESC50(data.Dataset):
             download_extract_zip(url, file_path)
 
         self.root = audio
+        self.cache_dict=dict()
         # getting name of all files inside the all the train_folds
         temp = sorted(os.listdir(self.root))
         folds = {int(v.split('-')[0]) for v in temp}
@@ -142,23 +143,27 @@ class ESC50(data.Dataset):
         # identifying the label of the sample from its name
         temp = file_name.split('.')[0]
         class_id = int(temp.split('-')[-1])
+        
+        if index not in self.cache_dict:
+            if wave.ndim == 1:
+                wave = wave[:, np.newaxis]
 
-        if wave.ndim == 1:
-            wave = wave[:, np.newaxis]
+            # normalizing waves to [-1, 1]
+            if np.abs(wave.max()) > 1.0:
+                wave = transforms.scale(wave, wave.min(), wave.max(), -1.0, 1.0)
+            wave = wave.T * 32768.0
 
-        # normalizing waves to [-1, 1]
-        if np.abs(wave.max()) > 1.0:
-            wave = transforms.scale(wave, wave.min(), wave.max(), -1.0, 1.0)
-        wave = wave.T * 32768.0
+            # Remove silent sections
+            start = wave.nonzero()[1].min()
+            end = wave.nonzero()[1].max()
+            wave = wave[:, start: end + 1]
 
-        # Remove silent sections
-        start = wave.nonzero()[1].min()
-        end = wave.nonzero()[1].max()
-        wave = wave[:, start: end + 1]
-
-        wave_copy = np.copy(wave)
-        wave_copy = self.wave_transforms(wave_copy)
-        wave_copy.squeeze_(0)
+            wave_copy = np.copy(wave)
+            wave_copy = self.wave_transforms(wave_copy)
+            wave_copy.squeeze_(0)
+            self.cache_dict[index]=wave_copy
+        else:
+            wave_copy=self.cache_dict[index]
 
         if self.n_mfcc:
             mfcc = librosa.feature.mfcc(y=wave_copy.numpy(),
@@ -188,43 +193,6 @@ class ESC50(data.Dataset):
             feat = (feat - self.global_mean) / self.global_std
 
         return file_name, feat, class_id
-
-class InMemoryESC50(ESC50):
-    def __init__(self, root, test_folds=frozenset((1,)), subset="train", global_mean_std=(0.0, 1.0), download=False, augmentedFlag=False):
-        super().__init__(root=root,
-                 test_folds=test_folds,
-                 subset=subset,
-                 global_mean_std=global_mean_std,
-                 download=download,
-                 augmentedFlag=augmentedFlag)
-                 
-        # Make safe folder name based on fold
-        fold_str = "_".join(str(f) for f in sorted(test_folds))
-        if not augmentedFlag:
-            output_dir = f"{config.esc50_preprocessed}/fold_{fold_str}_{subset}"
-        else:
-            output_dir = f"{config.augment_preprocessed}/fold_{fold_str}_{subset}"
-        folder_exists = os.path.exists(output_dir)
-
-        if not folder_exists:
-            os.makedirs(output_dir, exist_ok=True)       
-            print(f"Preprocessing {super().__len__()} samples to: {output_dir}")
-            for i in tqdm(range(super().__len__())):
-                fname, feat, label = super().__getitem__(i)
-                out_path = os.path.join(output_dir, fname.replace('.wav', '.pt'))
-                torch.save({'features': feat, 'label': label}, out_path)
-        
-        self.data = []
-        self.files = sorted([f for f in os.listdir(output_dir) if f.endswith('.pt')])
-        for f in tqdm(self.files, desc="Loading into RAM"):
-            data = torch.load(os.path.join(output_dir, f))
-            self.data.append((f, data['features'], data['label']))
-
-    def __len__(self):
-        return len(self.data)
-
-    def __getitem__(self, idx):
-        return self.data[idx]
         
 """
 def get_global_stats(data_path):

@@ -12,7 +12,7 @@ from functools import partial
     
 from models.model_classifier import ResNet18
 from models.utils import EarlyStopping, Tee
-from dataset.dataset_ESC50 import ESC50, get_global_stats, InMemoryESC50
+from dataset.dataset_ESC50 import ESC50, get_global_stats
 from augmentAudioClass import AudioAugmenter
 import config
 
@@ -136,6 +136,9 @@ def make_model():
 
 
 if __name__ == "__main__":
+    import time
+    start_time = time.time()
+    
     data_path = config.esc50_path
     use_cuda = torch.cuda.is_available()
     device = torch.device(f"cuda:{config.device_id}" if use_cuda else "cpu")
@@ -151,13 +154,18 @@ if __name__ == "__main__":
     augment_path = config.augment_path
     
     ESC50(subset="train", root=config.esc50_path, download=True)
-    audio_augmenter = AudioAugmenter(os.path.join(config.esc50_path, 'ESC-50-master/audio'), config.augment_path)
-    audio_augmenter.augment_data()
+    if not os.path.exists(config.augment_path)
+        audio_augmenter = AudioAugmenter(os.path.join(config.esc50_path, 'ESC-50-master/audio'), config.augment_path)
+        audio_augmenter.augment_data()
     
     # for all folds
     scores = {}
     # expensive!
+    global_stats = get_global_stats(data_path, augment_path)
+    print(global_stats)
     # for spectrograms
+    
+    print(f"LR: {config.lr}; WEIGHT: {config.weight_decay}")
     print("WARNING: Using hardcoded global mean and std. Depends on feature settings!")
     for test_fold in config.test_folds:
         experiment = os.path.join(experiment_root, f'{test_fold}')
@@ -234,7 +242,7 @@ if __name__ == "__main__":
                                         weight_decay=config.weight_decay)
             """
             #todo maybe change the parameters so that they are in config.py
-            optimizer = torch.optim.AdamW(model.parameters(), lr=1e-5, weight_decay=1e-2)
+            optimizer = torch.optim.AdamW(model.parameters(), lr=1e-4, weight_decay=1e-2)
 
             scheduler = torch.optim.lr_scheduler.StepLR(optimizer,
                                                         step_size=config.step_size,
@@ -259,4 +267,13 @@ if __name__ == "__main__":
             # print(scores[test_fold].unstack())
             print()
     scores = pd.concat(scores).unstack([-1])
+    
     print(pd.concat((scores, scores.agg(['mean', 'std']))))
+    
+    end = time.time()
+    length = (end - start) / 60
+    
+    print(f"LR: {config.lr}; WEIGHT: {config.weight_decay}")
+    print(global_stats)
+    
+    print(f"Runtime {length} min!")

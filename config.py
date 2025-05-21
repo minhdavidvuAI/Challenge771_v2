@@ -1,8 +1,6 @@
 # dir with ESC50 data
 esc50_path = 'data/esc50'
-esc50_preprocessed = 'data/preprocessed_data/esc50'
 augment_path = 'data/augmented'
-augment_preprocessed = 'data/preprocessed_data/augmented'
 runs_path = 'results'
 # sub-epoch (batch-level) progress bar display
 disable_bat_pbar = False
@@ -27,7 +25,7 @@ model_constructor = "ResNet18(num_classes=config.n_classes)"
 # ratio to split off from training data
 val_size = .2  # could be changed
 device_id = 0
-batch_size = 32
+batch_size = 8
 # in Colab to avoid Warning
 num_workers = 2
 num_workers = 0
@@ -43,7 +41,7 @@ lr = 1e-3
 weight_decay = 1e-2
 warm_epochs = 10
 gamma = 0.8
-step_size = 5
+step_size = 10
 
 # ### TESTING
 # model checkpoints loaded for testing
