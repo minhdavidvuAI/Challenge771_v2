@@ -154,7 +154,7 @@ if __name__ == "__main__":
     augment_path = config.augment_path
     
     ESC50(subset="train", root=config.esc50_path, download=True)
-    if not os.path.exists(config.augment_path)
+    if not os.path.exists(config.augment_path):
         audio_augmenter = AudioAugmenter(os.path.join(config.esc50_path, 'ESC-50-master/audio'), config.augment_path)
         audio_augmenter.augment_data()
     
