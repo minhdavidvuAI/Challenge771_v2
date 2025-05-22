@@ -12,7 +12,7 @@ from functools import partial
     
 from models.model_classifier import ResNet18
 from models.utils import EarlyStopping, Tee
-from dataset.dataset_ESC50 import ESC50, get_global_stats
+from dataset.dataset_ESC50 import ESC50, get_global_stats, ESC50Preprocessor
 from augmentAudioClass import AudioAugmenter
 import config
 
@@ -153,11 +153,21 @@ if __name__ == "__main__":
     
     augment_path = config.augment_path
     
+    # Get data
     ESC50(subset="train", root=config.esc50_path, download=True)
     if not os.path.exists(config.augment_path):
         audio_augmenter = AudioAugmenter(os.path.join(config.esc50_path, 'ESC-50-master/audio'), config.augment_path)
         audio_augmenter.augment_data()
     
+    # Preprocess data!
+    if not os.path.exists((os.path.join(config.runs_path, "preprocessed")))
+        pre = ESC50Preprocessor(
+            raw_root   = config.esc50_path,
+            aug_root   = config.augment_path,
+            cache_base = os.path.join(config.runs_path, "preprocessed")
+        )
+        pre.run()
+        
     # for all folds
     scores = {}
     # expensive!
@@ -176,6 +186,7 @@ if __name__ == "__main__":
         with Tee(os.path.join(experiment, 'train.log'), 'w', 1, encoding='utf-8',
                  newline='\n', proc_cr=True):
             # this function assures consistent 'test_folds' setting for train, val, test splits
+            """
             get_fold_dataset = partial(ESC50, root=data_path, download=False,
                                        test_folds={test_fold}, global_mean_std=global_stats[test_fold - 1])
 
@@ -192,7 +203,19 @@ if __name__ == "__main__":
             train_set = get_fold_dataset(subset="train")
             augmented_set = get_fold_augmented(subset="train")
             combined_dataset = ConcatDataset([train_set, augmented_set])
-            
+            """
+            raw_cache = os.path.join(config.runs_path, "preprocessed", "raw")
+            aug_cache = os.path.join(config.runs_path, "preprocessed", "aug")
+
+            get_raw = partial(
+                ESC50, cache_root=raw_cache, tag="raw",
+                subset="train", test_folds={test_fold}
+            )
+            get_aug = partial(
+                ESC50, cache_root=aug_cache, tag="aug",
+                subset="train", test_folds={test_fold}
+            )
+            train_set = ConcatDataset([get_raw(), get_aug()])
             # sanity check
             # train set should be the same length as augmented
             if len(train_set) != len(augmented_set):

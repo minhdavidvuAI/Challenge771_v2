@@ -52,11 +52,10 @@ def download_progress(current, total, width=80):
 
 
 class ESC50(data.Dataset):
-
-    def __init__(self, root, test_folds=frozenset((1,)), subset="train", global_mean_std=(0.0, 0.0), download=False, augmentedFlag=False):
+    def __init__(self, root, test_folds=frozenset((1,)), subset="train", global_mean_std=(0.0, 1.0), cache_root=None, tag='raw', download=False):
         audio = 'ESC-50-master/audio'
         #TODO
-        if augmentedFlag:
+        if raw == 'raw':
             audio = ""
         
         root = os.path.normpath(root)
@@ -132,12 +131,29 @@ class ESC50(data.Dataset):
         self.global_mean = global_mean_std[0]
         self.global_std = global_mean_std[1]
         self.n_mfcc = config.n_mfcc if hasattr(config, "n_mfcc") else None
+        
+        self.cache_root = cache_root
+        self.cache_tag = tag
 
     def __len__(self):
         return len(self.file_names)
 
     def __getitem__(self, index):
         file_name = self.file_names[index]
+        if self.cache_root:
+            fold = next(iter(self.test_folds))
+            cache_path = os.path.join(
+                self.cache_root,        # e.g. runs_path/preprocessed/raw
+                self.cache_tag,         # either "raw" or "aug"
+                f"fold{fold}",
+                self.subset,
+                file_name + ".pt"
+            )
+            if os.path.exists(cache_path):
+                data = torch.load(cache_path)
+                return file_name, data["feat"], data["label"]
+        
+        
         path = os.path.join(self.root, file_name)
         #wave, rate = librosa.load(path, sr=config.sr)
         wave, rate = torchaudio.load(path)
@@ -261,3 +277,44 @@ def get_global_stats(data_path, augment_path):
         res.append((combined_data.mean(), combined_data.std()))
     
     return np.array(res)
+    
+
+class ESC50Preprocessor:
+    def __init__(self, raw_root, aug_root, cache_base, folds=range(1,6), splits=("train","val","test")):
+        self.raw_root    = raw_root
+        self.aug_root    = aug_root
+        self.cache_base  = cache_base
+        self.folds       = folds
+        self.splits      = splits
+
+    def preprocess(self, audio_root, tag):
+        """
+        Walk through folds & splits under audio_root, compute and cache feats.
+        tag is either "raw" or "aug" (sub-directory under cache_base).
+        """
+        for fold in self.folds:
+            for split in self.splits:
+                ds = ESC50(
+                    root=audio_root,
+                    subset=split,
+                    test_folds={fold},
+                    download=True,
+                    global_mean_std=(0.0,1.0),
+                    cache_root=None   # force fresh compute
+                )
+                loader = DataLoader(ds, batch_size=1, shuffle=False, num_workers=4)
+                out_dir = os.path.join(self.cache_base, tag, f"fold{fold}", split)
+                os.makedirs(out_dir, exist_ok=True)
+                
+                for fname, feat, label in tqdm(loader, desc=f"{tag} fold{fold}/{split}"):
+                    torch.save(
+                        {"feat": feat.squeeze(0), "label": int(label)},
+                        os.path.join(out_dir, fname + ".pt")
+                    )
+        
+
+    def run(self):
+        # Raw data
+        self.preprocess(self.raw_root, "raw")
+        # Augmented data
+        self.preprocess(self.aug_root, "aug")
