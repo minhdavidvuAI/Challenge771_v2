@@ -55,7 +55,7 @@ class ESC50(data.Dataset):
     def __init__(self, root, test_folds=frozenset((1,)), subset="train", global_mean_std=(0.0, 1.0), cache_root=None, tag='raw', download=False):
         audio = 'ESC-50-master/audio'
         #TODO
-        if raw == 'raw':
+        if tag == 'raw':
             audio = ""
         
         root = os.path.normpath(root)
