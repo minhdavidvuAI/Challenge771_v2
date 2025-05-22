@@ -160,7 +160,7 @@ if __name__ == "__main__":
         audio_augmenter.augment_data()
     
     # Preprocess data!
-    if not os.path.exists((os.path.join(config.runs_path, "preprocessed")))
+    if not os.path.exists((os.path.join(config.runs_path, "preprocessed")))_
         pre = ESC50Preprocessor(
             raw_root   = config.esc50_path,
             aug_root   = config.augment_path,
@@ -207,15 +207,18 @@ if __name__ == "__main__":
             raw_cache = os.path.join(config.runs_path, "preprocessed", "raw")
             aug_cache = os.path.join(config.runs_path, "preprocessed", "aug")
 
-            get_raw = partial(
+            get_fold_dataset = partial(
                 ESC50, cache_root=raw_cache, tag="raw",
                 subset="train", test_folds={test_fold}
             )
-            get_aug = partial(
+            get_fold_augmented = partial(
                 ESC50, cache_root=aug_cache, tag="aug",
                 subset="train", test_folds={test_fold}
             )
-            train_set = ConcatDataset([get_raw(), get_aug()])
+            
+            train_set = get_fold_dataset(subset="train")
+            augmented_set = get_fold_augmented(subset="train")
+            combined_dataset = ConcatDataset([train_set, augmented_set])
             # sanity check
             # train set should be the same length as augmented
             if len(train_set) != len(augmented_set):
