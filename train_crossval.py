@@ -137,7 +137,7 @@ def make_model():
 
 if __name__ == "__main__":
     import time
-    start_time = time.time()
+    start = time.time()
     
     data_path = config.esc50_path
     use_cuda = torch.cuda.is_available()
