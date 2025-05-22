@@ -161,7 +161,7 @@ if __name__ == "__main__":
     # for all folds
     scores = {}
     # expensive!
-    global_stats = get_global_stats(data_path, augment_path)
+    #global_stats = get_global_stats(data_path, augment_path)
     print(global_stats)
     # for spectrograms
     
