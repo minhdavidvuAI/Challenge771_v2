@@ -160,7 +160,7 @@ if __name__ == "__main__":
         audio_augmenter.augment_data()
     
     # Preprocess data!
-    if not os.path.exists((os.path.join(config.runs_path, "preprocessed")))_
+    if not os.path.exists((os.path.join(config.runs_path, "preprocessed"))):
         pre = ESC50Preprocessor(
             raw_root   = config.esc50_path,
             aug_root   = config.augment_path,
