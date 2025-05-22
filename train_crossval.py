@@ -137,7 +137,7 @@ def make_model():
 
 if __name__ == "__main__":
     import time
-    start = time.time()
+    start_time = time.time()
     
     data_path = config.esc50_path
     use_cuda = torch.cuda.is_available()
@@ -153,16 +153,15 @@ if __name__ == "__main__":
     
     augment_path = config.augment_path
     
-    # Get data
     ESC50(subset="train", root=config.esc50_path, download=True)
     if not os.path.exists(config.augment_path):
         audio_augmenter = AudioAugmenter(os.path.join(config.esc50_path, 'ESC-50-master/audio'), config.augment_path)
         audio_augmenter.augment_data()
-        
+    
     # for all folds
     scores = {}
     # expensive!
-    #global_stats = get_global_stats(data_path, augment_path)
+    global_stats = get_global_stats(data_path, augment_path)
     print(global_stats)
     # for spectrograms
     
@@ -193,6 +192,7 @@ if __name__ == "__main__":
             train_set = get_fold_dataset(subset="train")
             augmented_set = get_fold_augmented(subset="train")
             combined_dataset = ConcatDataset([train_set, augmented_set])
+            
             # sanity check
             # train set should be the same length as augmented
             if len(train_set) != len(augmented_set):
@@ -209,7 +209,7 @@ if __name__ == "__main__":
             print(f'train folds are {train_set.train_folds} and test fold is {train_set.test_folds}')
             print('random wave cropping')
 
-            train_loader = torch.utils.data.DataLoader(augmented_set,
+            train_loader = torch.utils.data.DataLoader(combined_dataset,
                                                        batch_size=config.batch_size,
                                                        shuffle=True,
                                                        num_workers=config.num_workers,

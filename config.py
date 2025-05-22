@@ -15,8 +15,7 @@ test_folds = [1, 2, 3, 4, 5]
 
 # sampling rate for waves
 sr = 44100
-n_mels = 64
-#n_mels = 128
+n_mels = 128
 hop_length = 512
 #n_mfcc = 42
 
@@ -38,7 +37,7 @@ epochs = 200
 #epochs = 1
 # early stopping after epochs with no improvement
 patience = 20
-lr = 1e-3
+lr = 1e-4
 weight_decay = 1e-2
 warm_epochs = 10
 gamma = 0.8

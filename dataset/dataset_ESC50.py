@@ -8,7 +8,6 @@ import sys
 from functools import partial
 import numpy as np
 import librosa
-import torchaudio
 
 import config
 from . import transforms
@@ -105,7 +104,7 @@ class ESC50(data.Dataset):
                 transforms.RandomScale(max_scale=1.25),
                 transforms.RandomPadding(out_len=out_len),
                 transforms.RandomCrop(out_len=out_len),
-                #transforms.RandomNoise(),
+                transforms.RandomNoise(min_noise=0.001, max_noise=0.01),
             )
 
             self.spec_transforms = transforms.Compose(
@@ -114,6 +113,8 @@ class ESC50(data.Dataset):
                 # lambda non-pickleable, problem on windows, replace with partial function
                 torch.Tensor,
                 partial(torch.unsqueeze, dim=0),
+                transforms.FrequencyMask(max_width=8, numbers=2),
+                transforms.TimeMask(max_width=10, numbers=2),
             )
 
         else:
@@ -127,7 +128,7 @@ class ESC50(data.Dataset):
 
             self.spec_transforms = transforms.Compose(
                 torch.Tensor,
-                #partial(torch.unsqueeze, dim=0),
+                partial(torch.unsqueeze, dim=0),
             )
         self.global_mean = global_mean_std[0]
         self.global_std = global_mean_std[1]
@@ -139,26 +140,13 @@ class ESC50(data.Dataset):
     def __getitem__(self, index):
         file_name = self.file_names[index]
         path = os.path.join(self.root, file_name)
-        #wave, rate = librosa.load(path, sr=config.sr)
-        wave, rate = torchaudio.load(path)
-        if rate != config.sr:
-            resampler = torchaudio.transforms.Resample(orig_freq=rate, new_freq=config.sr)
-            wave = resampler(wave)
-            
-        # Convert to mono if stereo
-        if wave.shape[0] > 1:
-            wave = wave.mean(dim=0, keepdim=True)  # shape: [1, samples]
-
-        # Transpose and scale (to match original librosa-based flow)
-        wave = wave * 32768.0  # Assuming same scale intent as original
-        wave_np = wave.numpy()
+        wave, rate = librosa.load(path, sr=config.sr)
 
         # identifying the label of the sample from its name
         temp = file_name.split('.')[0]
         class_id = int(temp.split('-')[-1])
         
         if index not in self.cache_dict:
-            """
             if wave.ndim == 1:
                 wave = wave[:, np.newaxis]
 
@@ -166,7 +154,7 @@ class ESC50(data.Dataset):
             if np.abs(wave.max()) > 1.0:
                 wave = transforms.scale(wave, wave.min(), wave.max(), -1.0, 1.0)
             wave = wave.T * 32768.0
-            """ 
+
             # Remove silent sections
             start = wave.nonzero()[1].min()
             end = wave.nonzero()[1].max()
@@ -178,7 +166,7 @@ class ESC50(data.Dataset):
             self.cache_dict[index]=wave_copy
         else:
             wave_copy=self.cache_dict[index]
-        """
+
         if self.n_mfcc:
             mfcc = librosa.feature.mfcc(y=wave_copy.numpy(),
                                         sr=config.sr,
@@ -201,30 +189,6 @@ class ESC50(data.Dataset):
             log_s = self.spec_transforms(log_s)
 
             feat = log_s
-        """
-        # Feature extraction
-        if self.n_mfcc:
-            mfcc = torchaudio.transforms.MFCC(
-                sample_rate=config.sr,
-                n_mfcc=self.n_mfcc,
-                melkwargs={
-                    "n_fft": 1024,
-                    "hop_length": config.hop_length,
-                    "n_mels": config.n_mels,
-                }
-            )(wave_copy.unsqueeze(0))  # shape: [1, n_mfcc, time]
-            feat = mfcc.squeeze(0)
-        else:
-            mel_spec = torchaudio.transforms.MelSpectrogram(
-                sample_rate=config.sr,
-                n_fft=1024,
-                hop_length=config.hop_length,
-                n_mels=config.n_mels,
-            )(wave_copy.unsqueeze(0))
-
-            feat = torchaudio.transforms.AmplitudeToDB()(mel_spec)
-            #log_s = self.spec_transforms(log_s)
-            #feat = log_s
 
         # normalize
         if self.global_mean:
@@ -261,4 +225,3 @@ def get_global_stats(data_path, augment_path):
         res.append((combined_data.mean(), combined_data.std()))
     
     return np.array(res)
-    
