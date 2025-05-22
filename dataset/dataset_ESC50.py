@@ -229,7 +229,9 @@ class ESC50(data.Dataset):
         # normalize
         if self.global_mean:
             feat = (feat - self.global_mean) / self.global_std
-
+        if feat.dim() == 3:
+            feat = feat.squeeze(0)  # If shape is [1, H, W], become [H, W]
+        feat = feat.unsqueeze(0)  # Make sure it's [1, H, W]
         return file_name, feat, class_id
         
 """
