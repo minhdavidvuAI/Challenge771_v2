@@ -178,7 +178,7 @@ class ESC50(data.Dataset):
             self.cache_dict[index]=wave_copy
         else:
             wave_copy=self.cache_dict[index]
-"""
+        """
         if self.n_mfcc:
             mfcc = librosa.feature.mfcc(y=wave_copy.numpy(),
                                         sr=config.sr,
@@ -201,7 +201,7 @@ class ESC50(data.Dataset):
             log_s = self.spec_transforms(log_s)
 
             feat = log_s
-"""
+        """
         # Feature extraction
         if self.n_mfcc:
             mfcc = torchaudio.transforms.MFCC(
