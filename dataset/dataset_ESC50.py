@@ -222,16 +222,14 @@ class ESC50(data.Dataset):
                 n_mels=config.n_mels,
             )(wave_copy.unsqueeze(0))
 
-            log_s = torchaudio.transforms.AmplitudeToDB()(mel_spec)
-            log_s = self.spec_transforms(log_s)
-            feat = log_s
+            feat = torchaudio.transforms.AmplitudeToDB()(mel_spec)
+            #log_s = self.spec_transforms(log_s)
+            #feat = log_s
 
         # normalize
         if self.global_mean:
             feat = (feat - self.global_mean) / self.global_std
-        #if feat.dim() == 3:
-        #    feat = feat.squeeze(0)  # If shape is [1, H, W], become [H, W]
-        feat = feat.unsqueeze(0)  # Make sure it's [1, H, W]
+
         return file_name, feat, class_id
         
 """
