@@ -268,9 +268,10 @@ class ESC50Preprocessor:
             cache_root=None,
             global_mean_std=(0.0,1.0)
             )
-            
+        
+        print(self.audio_root)
+        print(config.augment_path)
         if self.audio_root == config.augment_path:
-            print("hier")
             ds = ESC50(
                 root=self.audio_root,
                 subset=split,
