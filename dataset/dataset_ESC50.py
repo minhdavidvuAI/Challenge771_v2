@@ -275,7 +275,7 @@ class ESC50Preprocessor:
         for fname, feat, label in tqdm(loader, desc=f"Fold {fold} | {split}"):
             torch.save(
                 {"feat": feat.squeeze(0), "label": int(label)},
-                os.path.join(out_dir, fname + ".pt")
+                os.path.join(out_dir, f"{fname}.pt")
             )
 
     def run(self):
