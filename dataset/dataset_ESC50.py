@@ -270,6 +270,7 @@ class ESC50Preprocessor:
             )
             
         if self.audio_root == config.augment_path:
+            print("hier")
             ds = ESC50(
                 root=self.audio_root,
                 subset=split,
@@ -278,7 +279,7 @@ class ESC50Preprocessor:
                 # bypass any in-__getitem__ caching, we want fresh computation
                 cache_root=None,
                 global_mean_std=(0.0,1.0),
-                augment = True
+                augmentedFlag = True
             )
         loader = torch.utils.data.DataLoader(ds, batch_size=1, shuffle=False, num_workers=4)
         out_dir = os.path.join(self.cache_root, f"fold{fold}", split)
