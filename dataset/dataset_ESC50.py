@@ -266,8 +266,20 @@ class ESC50Preprocessor:
             download=False,
             # bypass any in-__getitem__ caching, we want fresh computation
             cache_root=None,
-            global_mean_std=(0.0,1.0),
-        )
+            global_mean_std=(0.0,1.0)
+            )
+            
+        if audio_root == config.augment_path:
+            ds = ESC50(
+                root=self.audio_root,
+                subset=split,
+                test_folds={fold},
+                download=False,
+                # bypass any in-__getitem__ caching, we want fresh computation
+                cache_root=None,
+                global_mean_std=(0.0,1.0),
+                augment = True
+            )
         loader = torch.utils.data.DataLoader(ds, batch_size=1, shuffle=False, num_workers=4)
         out_dir = os.path.join(self.cache_root, f"fold{fold}", split)
         os.makedirs(out_dir, exist_ok=True)
