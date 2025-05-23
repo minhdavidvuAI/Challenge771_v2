@@ -189,7 +189,7 @@ if __name__ == "__main__":
 
             get_fold_dataset = partial(
                 ESC50,
-                root=None,  # raw audio root ignored when cache_root is set
+                root=data_path,  # raw audio root ignored when cache_root is set
                 cache_root=os.path.join(cache_base, "raw"),
                 tag="raw",
                 download=False,
@@ -199,7 +199,7 @@ if __name__ == "__main__":
             
             get_fold_augmented = partial(
                 ESC50,
-                root=None,
+                root=augment_path,
                 cache_root=os.path.join(cache_base, "aug"),
                 tag="aug",
                 download=False,
