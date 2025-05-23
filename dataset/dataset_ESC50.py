@@ -269,7 +269,7 @@ class ESC50Preprocessor:
             global_mean_std=(0.0,1.0)
             )
             
-        if audio_root == config.augment_path:
+        if self.audio_root == config.augment_path:
             ds = ESC50(
                 root=self.audio_root,
                 subset=split,
