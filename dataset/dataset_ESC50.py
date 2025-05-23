@@ -8,7 +8,7 @@ import sys
 from functools import partial
 import numpy as np
 import librosa
-
+from torch.utils.data import dataloader
 import config
 from . import transforms
 
@@ -52,7 +52,7 @@ def download_progress(current, total, width=80):
 
 class ESC50(data.Dataset):
 
-    def __init__(self, root, test_folds=frozenset((1,)), subset="train", global_mean_std=(0.0, 1.0), download=False, augmentedFlag=False):
+    def __init__(self, root, test_folds=frozenset((1,)), subset="train",cache_root=None, tag="raw", global_mean_std=(0.0, 1.0), download=False, augmentedFlag=False):
         audio = 'ESC-50-master/audio'
         #TODO
         if augmentedFlag:
@@ -74,7 +74,10 @@ class ESC50(data.Dataset):
             download_extract_zip(url, file_path)
 
         self.root = audio
-        self.cache_dict=dict()
+        self.cache_dict = dict()
+        # new
+        self.cache_root = cache_root
+        self.cache_tag = tag
         # getting name of all files inside the all the train_folds
         temp = sorted(os.listdir(self.root))
         folds = {int(v.split('-')[0]) for v in temp}
@@ -139,6 +142,24 @@ class ESC50(data.Dataset):
 
     def __getitem__(self, index):
         file_name = self.file_names[index]
+        
+        # If cache_root is specified, try loading precomputed feature
+        if self.cache_root:
+            fold = next(iter(self.test_folds))
+            cache_path = os.path.join(
+                self.cache_root,
+                self.cache_tag,
+                f"fold{fold}",
+                self.subset,
+                file_name + ".pt"
+            )
+            if os.path.exists(cache_path):
+                data = torch.load(cache_path)
+                feat = data["feat"]
+                class_id = data["label"]
+                return file_name, feat, class_id
+                
+        #normal
         path = os.path.join(self.root, file_name)
         wave, rate = librosa.load(path, sr=config.sr)
 
@@ -225,3 +246,39 @@ def get_global_stats(data_path, augment_path):
         res.append((combined_data.mean(), combined_data.std()))
     
     return np.array(res)
+    
+class ESC50Preprocessor:
+    """
+    Precompute and cache features for all folds and splits
+    so training can load .pt files directly.
+    """
+    def __init__(self, audio_root, cache_root, folds=(1,2,3,4,5), splits=("train","val","test")):
+        self.audio_root = audio_root
+        self.cache_root = cache_root
+        self.folds      = folds
+        self.splits     = splits
+
+    def preprocess_fold(self, fold, split):
+        ds = ESC50(
+            root=self.audio_root,
+            subset=split,
+            test_folds={fold},
+            download=False,
+            # bypass any in-__getitem__ caching, we want fresh computation
+            cache_root=None,
+            global_mean_std=(0.0,1.0),
+        )
+        loader = torch.utils.data.DataLoader(ds, batch_size=1, shuffle=False, num_workers=4)
+        out_dir = os.path.join(self.cache_root, f"fold{fold}", split)
+        os.makedirs(out_dir, exist_ok=True)
+
+        for fname, feat, label in tqdm(loader, desc=f"Fold {fold} | {split}"):
+            torch.save(
+                {"feat": feat.squeeze(0), "label": int(label)},
+                os.path.join(out_dir, fname + ".pt")
+            )
+
+    def run(self):
+        for fold in self.folds:
+            for split in self.splits:
+                self.preprocess_fold(fold, split)

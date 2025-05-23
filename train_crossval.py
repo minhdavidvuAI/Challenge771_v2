@@ -12,7 +12,7 @@ from functools import partial
     
 from models.model_classifier import ResNet18
 from models.utils import EarlyStopping, Tee
-from dataset.dataset_ESC50 import ESC50, get_global_stats
+from dataset.dataset_ESC50 import ESC50, get_global_stats, ESC50Preprocessor
 from augmentAudioClass import AudioAugmenter
 import config
 
@@ -137,7 +137,7 @@ def make_model():
 
 if __name__ == "__main__":
     import time
-    start_time = time.time()
+    start = time.time()
     
     data_path = config.esc50_path
     use_cuda = torch.cuda.is_available()
@@ -158,10 +158,19 @@ if __name__ == "__main__":
         audio_augmenter = AudioAugmenter(os.path.join(config.esc50_path, 'ESC-50-master/audio'), config.augment_path)
         audio_augmenter.augment_data()
     
+    # Preprocess raw and augmented data if cache not exist
+    cache_base = os.path.join("data", "preprocessed")
+    if not os.path.isdir(cache_base):
+        print("Preprocessing raw and augmented audio...")
+        pp_raw = ESC50Preprocessor(audio_root=data_path, cache_root=os.path.join(cache_base, "raw"))
+        pp_raw.run()
+        pp_aug = ESC50Preprocessor(audio_root=augment_path, cache_root=os.path.join(cache_base, "aug"))
+        pp_aug.run()
+        
     # for all folds
     scores = {}
     # expensive!
-    global_stats = get_global_stats(data_path, augment_path)
+    #global_stats = get_global_stats(data_path, augment_path)
     print(global_stats)
     # for spectrograms
     
@@ -176,23 +185,33 @@ if __name__ == "__main__":
         with Tee(os.path.join(experiment, 'train.log'), 'w', 1, encoding='utf-8',
                  newline='\n', proc_cr=True):
             # this function assures consistent 'test_folds' setting for train, val, test splits
-            get_fold_dataset = partial(ESC50, root=data_path, download=False,
-                                       test_folds={test_fold}, global_mean_std=global_stats[test_fold - 1])
+            cache_base = os.path.join(runs_path, "preprocessed")
 
+            get_fold_dataset = partial(
+                ESC50,
+                root=None,  # raw audio root ignored when cache_root is set
+                cache_root=os.path.join(cache_base, "raw"),
+                tag="raw",
+                download=False,
+                test_folds={test_fold},
+                global_mean_std=global_stats[test_fold - 1]
+            )
             
             get_fold_augmented = partial(
                 ESC50,
-                root=augment_path,
+                root=None,
+                cache_root=os.path.join(cache_base, "aug"),
+                tag="aug",
                 download=False,
                 test_folds={test_fold},
                 global_mean_std=global_stats[test_fold - 1],
-                augmentedFlag=True,
+                augmentedFlag=True
             )
-            
+
             train_set = get_fold_dataset(subset="train")
             augmented_set = get_fold_augmented(subset="train")
             combined_dataset = ConcatDataset([train_set, augmented_set])
-            
+
             # sanity check
             # train set should be the same length as augmented
             if len(train_set) != len(augmented_set):
