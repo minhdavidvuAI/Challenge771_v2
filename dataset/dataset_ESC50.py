@@ -294,5 +294,4 @@ class ESC50Preprocessor:
 
     def run(self):
         for fold in self.folds:
-            for split in self.splits:
-                self.preprocess_fold(fold, split)
+            self.preprocess_fold(fold, "train")
