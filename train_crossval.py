@@ -164,7 +164,7 @@ if __name__ == "__main__":
         print("Preprocessing raw and augmented audio...")
         pp_raw = ESC50Preprocessor(audio_root=data_path, cache_root=os.path.join(cache_base, "raw"))
         pp_raw.run()
-        pp_aug = ESC50Preprocessor(audio_root=augment_path, cache_root=os.path.join(cache_base, "aug"))
+        pp_aug = ESC50Preprocessor(audio_root=augment_path, cache_root=os.path.join(cache_base, "aug"),augmentedFlag=True)
         pp_aug.run()
         
     # for all folds

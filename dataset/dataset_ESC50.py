@@ -252,26 +252,15 @@ class ESC50Preprocessor:
     Precompute and cache features for all folds and splits
     so training can load .pt files directly.
     """
-    def __init__(self, audio_root, cache_root, folds=(1,2,3,4,5), splits=("train","val","test")):
+    def __init__(self, audio_root, cache_root, folds=(1,2,3,4,5), splits=("train","val","test"), augmentedFlag=False):
         self.audio_root = audio_root
         self.cache_root = cache_root
         self.folds      = folds
         self.splits     = splits
+        self.augmentedFlag = augmentedFlag
 
     def preprocess_fold(self, fold, split):
-        ds = ESC50(
-            root=self.audio_root,
-            subset=split,
-            test_folds={fold},
-            download=False,
-            # bypass any in-__getitem__ caching, we want fresh computation
-            cache_root=None,
-            global_mean_std=(0.0,1.0)
-            )
-        
-        print(self.audio_root)
-        print(config.augment_path)
-        if self.audio_root == config.augment_path:
+        if self.augmentedFlag:
             ds = ESC50(
                 root=self.audio_root,
                 subset=split,
@@ -282,6 +271,17 @@ class ESC50Preprocessor:
                 global_mean_std=(0.0,1.0),
                 augmentedFlag = True
             )
+        else:
+            ds = ESC50(
+                root=self.audio_root,
+                subset=split,
+                test_folds={fold},
+                download=False,
+                # bypass any in-__getitem__ caching, we want fresh computation
+                cache_root=None,
+                global_mean_std=(0.0,1.0)
+                )
+                
         loader = torch.utils.data.DataLoader(ds, batch_size=1, shuffle=False, num_workers=4)
         out_dir = os.path.join(self.cache_root, f"fold{fold}", split)
         os.makedirs(out_dir, exist_ok=True)

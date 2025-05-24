@@ -46,12 +46,15 @@ class ResNet18(nn.Module):
         self.in_channels = 64
 
         # Adapt input conv for input_channels (e.g., 1 for spectrogram)
+        #self.conv1 = nn.Conv2d(input_channels, self.in_channels,
+        #                       kernel_size=7, stride=2, padding=3, bias=False)
+        
         self.conv1 = nn.Conv2d(input_channels, self.in_channels,
-                               kernel_size=7, stride=2, padding=3, bias=False)
+                               kernel_size=3, stride=1, padding=1, bias=False)
         self.bn1 = nn.BatchNorm2d(self.in_channels)
         self.relu = nn.ReLU(inplace=True)
 
-        self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+        #self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
 
         # ResNet18 layers configuration: 2 blocks per layer
         self.layer1 = self._make_layer(64, blocks=2, stride=1)
@@ -86,7 +89,7 @@ class ResNet18(nn.Module):
         x = self.conv1(x)      # [B, 64, H/2, W/2]
         x = self.bn1(x)
         x = self.relu(x)
-        x = self.maxpool(x)    # [B, 64, H/4, W/4]
+        #x = self.maxpool(x)    # [B, 64, H/4, W/4]
 
         x = self.layer1(x)     # [B, 64, H/4, W/4]
         x = self.layer2(x)     # [B, 128, H/8, W/8]
