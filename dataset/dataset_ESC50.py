@@ -252,7 +252,7 @@ class ESC50Preprocessor:
     Precompute and cache features for all folds and splits
     so training can load .pt files directly.
     """
-    def __init__(self, audio_root, cache_root, folds=(1,2,3,4,5), splits=("train","val","test"), augmentedFlag=False):
+    def __init__(self, audio_root, cache_root, folds=(1,2,3,4,5), splits=("train"), augmentedFlag=False):
         self.audio_root = audio_root
         self.cache_root = cache_root
         self.folds      = folds

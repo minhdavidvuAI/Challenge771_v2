@@ -161,9 +161,10 @@ if __name__ == "__main__":
     # Preprocess raw and augmented data if cache not exist
     cache_base = os.path.join("data", "preprocessed")
     if not os.path.isdir(cache_base):
-        print("Preprocessing raw and augmented audio...")
+        print("Preprocessing raw audio...")
         pp_raw = ESC50Preprocessor(audio_root=data_path, cache_root=os.path.join(cache_base, "raw"))
         pp_raw.run()
+        print("Preprocessing augmented audio...")
         pp_aug = ESC50Preprocessor(audio_root=augment_path, cache_root=os.path.join(cache_base, "aug"),augmentedFlag=True)
         pp_aug.run()
         
